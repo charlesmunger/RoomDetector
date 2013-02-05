@@ -19,7 +19,7 @@ public class InRoomService extends RoboIntentService {
 	@Override
 	public void onHandleIntent(Intent intent) {
 		Log.d(TAG, "acquiring wakelock");
-		PowerManager.WakeLock wl= pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
+		PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
 		wl.acquire();
 		try {
 			if(inRoom()) {
