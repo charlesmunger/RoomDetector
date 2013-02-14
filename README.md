@@ -23,8 +23,9 @@ OTHER USES
 
 If and when we are able to successfully detect room presence, we realize there are many potential uses of this information other than silencing the phone upon a call. Some areas we will explore are:
 
--Media player auto-pause on call (only when phone in room)
--Locality plugin : offer the knowledge of room presence as a plugin to the popular location and sensory aware app
+— Media player auto-pause on call (only when phone in room)
+
+— Locality plugin : offer the knowledge of room presence as a plugin to the popular location and sensory aware app
 
 PROGRESS
 --------
