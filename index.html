@@ -1,0 +1,79 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Roomdetector by charlesmunger</title>
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="javascripts/main.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+  </head>
+  <body>
+
+      <header>
+        <h1>Roomdetector</h1>
+        <p>Room Presence Detection With High Frequency Sound</p>
+      </header>
+
+      <div id="banner">
+        <span id="logo"></span>
+
+        <a href="https://github.com/charlesmunger/RoomDetector" class="button fork"><strong>View On GitHub</strong></a>
+        <div class="downloads">
+          <span>Downloads:</span>
+          <ul>
+            <li><a href="https://github.com/charlesmunger/RoomDetector/zipball/master" class="button">ZIP</a></li>
+            <li><a href="https://github.com/charlesmunger/RoomDetector/tarball/master" class="button">TAR</a></li>
+          </ul>
+        </div>
+      </div><!-- end banner -->
+
+    <div class="wrapper">
+      <nav>
+        <ul></ul>
+      </nav>
+      <section>
+        <h1>RoomDetector</h1>
+
+<h2>MOTIVATION</h2>
+
+<p>Far too often phones ring when they shouldn't - In a meeting, movie theater, or other do-not-disturb setting. It would be a favor to everyone if phones could sense when they should silence their ringers - without the need of the user remembering to do so.</p>
+
+<h2>CONCEPT</h2>
+
+<p>In our experimentation and survey of similar technologies in the field, we found some ways of potentially achieving room presence, and an understanding of why these simply don't work to the degree needed. Consumer GPS does not have the precision to differentiate between users located on either sides of walls; and suffers greatly indoors. WiFi signal strength is a decent indicator of proximity to an access point, but traverses walls well enough to suffer from the same pitfall as GPS. This lead us to think: what signal travels poorly through walls, and can be contained in a room? Sound - especially high frequency sound - is almost entirely contained behind walls and even windows at reasonable volume levels. And, luckily, there is a narrow band of sound (18Khz-20Khz) that though inaudible by most humans, is easily picked up by standard phone microphones and emit-able by practically any small speaker. Our project concept involves making use of this narrow band to transmit a 'quiet-time' signal in the room, and have any un-silenced phone check for the signal instead of immediately ringing - potentially vibrating or altering the way it notifies the user if it in fact realizes it should not disturb the room in quiet-time.</p>
+
+<h2>DETECTING ROOM PRESENCE</h2>
+
+<p>Our concept requires two components to successfully broadcast and detect a room presence signal - an emitter and a receiver (though these could be the very same device!). The emitter can be any device in the room capable of playing a high frequency sound: a computer, another phone, even a stereo music player with prerecorded signal on CD/USB drive. Any phone (and potentially other microphone-enabled devices) can serve as a receiver.</p>
+
+<p>When room presence detection is desired in a room (e.g. when a meeting is in session in the conference room), an emitter will begin to play a high frequency sound pulse on a short interval (~0.5 seconds). Then, upon specified events - like an incoming phone call - receivers will divert the incoming call to run the preloaded software to detect if the device is within a room with an active emitter. By simply listening for slightly longer than the emitter interval (~0.75 seconds), the recorded sound clip should exhibit significant level fluctuation in that high frequency range if the phone is within listening range of the emitter; since it will hear the pulse sound level, and a baseline level when the pulse is not playing.</p>
+
+<h2>OTHER USES</h2>
+
+<p>If and when we are able to successfully detect room presence, we realize there are many potential uses of this information other than silencing the phone upon a call. Some areas we will explore are:</p>
+
+<p>-Media player auto-pause on call (only when phone in room)
+-Locality plugin : offer the knowledge of room presence as a plugin to the popular location and sensory aware app</p>
+
+<h2>PROGRESS</h2>
+
+<p>Feb 3 - Tested phone microphone frequency range. Using a spectral sound analyzer app, we found that a phone microphone was able to easily detect a signal at 18Khz. The signal was undetectable behind walls, yet completely detectable at any point in the room. It was also inaudible by us or anyone in the classroom.</p>
+
+<p>Feb 4 - Tested the ability to intercept an incoming phone call, and run our test program instead. Successful.</p>
+      </section>
+      <footer>
+        <p>Project maintained by <a href="https://github.com/charlesmunger">charlesmunger</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="http://twitter.com/#!/michigangraham">mattgraham</a></small></p>
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+    
+  </body>
+</html>
