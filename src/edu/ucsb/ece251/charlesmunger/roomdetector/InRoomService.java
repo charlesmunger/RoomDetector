@@ -19,7 +19,9 @@ public class InRoomService extends RoboIntentService {
 
 	private static final String TAG = "InRoomService";
 	public static final String PENDING_INTENT = "PendingIntent";
-	@Inject PowerManager pm;
+	@Inject
+	PowerManager pm;
+
 	public InRoomService() {
 		super(TAG);
 	}
@@ -27,12 +29,18 @@ public class InRoomService extends RoboIntentService {
 	@Override
 	public void onHandleIntent(Intent intent) {
 		Log.d(TAG, "acquiring wakelock");
-		PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
+		PowerManager.WakeLock wl = pm.newWakeLock(
+				PowerManager.PARTIAL_WAKE_LOCK, TAG);
 		wl.acquire();
 		try {
-			if(inRoom()) {
-				Log.d(TAG, "Launching intent" + ((Intent) intent.getParcelableExtra(PENDING_INTENT)).getAction());
-				startService(((Intent) intent.getParcelableExtra(PENDING_INTENT)));
+			if (inRoom()) {
+				Log.d(TAG,
+						"Launching intent"
+								+ ((Intent) intent
+										.getParcelableExtra(PENDING_INTENT))
+										.getAction());
+				startService(((Intent) intent
+						.getParcelableExtra(PENDING_INTENT)));
 			}
 		} finally {
 			wl.release();
@@ -43,26 +51,26 @@ public class InRoomService extends RoboIntentService {
 		new Audio().start();
 		return true;
 	}
-	
+
 	/*
-	 * Thread to manage live recording/playback of voice input from the device's microphone.
+	 * Thread to manage live recording/playback of voice input from the device's
+	 * microphone.
 	 */
-	private class Audio extends Thread
-	{ 
-	    private boolean stopped = false;
+	private class Audio extends Thread {
+		private boolean stopped = false;
 
-	    /**
-	     * Give the thread high priority so that it's not canceled unexpectedly, and start it
-	     */
-	    private Audio()
-	    { 
-	        android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
-	        start();
-	    }
+		/**
+		 * Give the thread high priority so that it's not canceled unexpectedly,
+		 * and start it
+		 */
+		private Audio() {
+			android.os.Process
+					.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
+			start();
+		}
 
-	    @Override
-	    public void run()
-	    { 
+		@Override
+	    public void run() { 
 	        Log.i("Audio", "Running Audio Thread");
 	        AudioRecord recorder = null;
 	        AudioTrack track = null;
@@ -73,15 +81,14 @@ public class InRoomService extends RoboIntentService {
 	         * Initialize buffer to hold continuously recorded audio data, start recording, and start
 	         * playback.
 	         */
-	        try
-	        {
+	        try {
 	            int N = AudioRecord.getMinBufferSize(8000,AudioFormat.CHANNEL_IN_MONO,AudioFormat.ENCODING_PCM_16BIT);
 	            recorder = new AudioRecord(AudioSource.MIC, 8000, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, N*10);
 	            track = new AudioTrack(AudioManager.STREAM_MUSIC, 8000, 
 	                    AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT, N*10, AudioTrack.MODE_STREAM);
 	            recorder.startRecording();
 	            Visualizer v = new Visualizer(track.getAudioSessionId());
-	            v.setDataCaptureListener(new OnDataCaptureListener() {
+	            final OnDataCaptureListener listener = new OnDataCaptureListener() {
 					private int average = 0;
 					private int min = Integer.MIN_VALUE;
 					private int max = Integer.MAX_VALUE;
@@ -100,7 +107,8 @@ public class InRoomService extends RoboIntentService {
 					private int getIndex(Visualizer visualizer) {
 						return visualizer.getCaptureSize()/2 /visualizer.getSamplingRate();
 					}
-				}, rate, waveform, fft)
+				};
+				v.setDataCaptureListener(listener, rate, waveform, fft)
 	            /*
 	             * Loops until something outside of this thread stops it.
 	             * Reads the data from the recorder and writes it to the audio track for playback.
@@ -130,13 +138,13 @@ public class InRoomService extends RoboIntentService {
 	        }
 	    }
 
-	    /**
-	     * Called from outside of the thread in order to stop the recording/playback loop
-	     */
-	    private void close()
-	    { 
-	         stopped = true;
-	    }
+		/**
+		 * Called from outside of the thread in order to stop the
+		 * recording/playback loop
+		 */
+		private void close() {
+			stopped = true;
+		}
 
 	}
 }
