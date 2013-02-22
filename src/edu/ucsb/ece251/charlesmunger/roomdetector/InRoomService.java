@@ -1,5 +1,8 @@
 package edu.ucsb.ece251.charlesmunger.roomdetector;
 
+import java.io.Closeable;
+import java.util.Arrays;
+
 import roboguice.service.RoboIntentService;
 import android.content.Intent;
 import android.media.AudioFormat;
@@ -23,6 +26,8 @@ public class InRoomService extends RoboIntentService {
 	private static final float BEEP_LOUDNESS_THRESHOLD = 0.2f;
 	@Inject
 	PowerManager pm;
+	@Inject
+	AudioManager am;
 
 	public InRoomService() {
 		super(TAG);
@@ -50,7 +55,16 @@ public class InRoomService extends RoboIntentService {
 	}
 
 	private boolean inRoom() {
-		new Audio().start();
+		Audio a = new Audio();
+		a.start();
+		try {
+			a.join();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		a.close();
+		
 		return true;
 	}
 
@@ -58,7 +72,8 @@ public class InRoomService extends RoboIntentService {
 	 * Thread to manage live recording/playback of voice input from the device's
 	 * microphone.
 	 */
-	private class Audio extends Thread {
+	private class Audio extends Thread implements Closeable {
+		private static final int FFT_FREQUENCY = 20000;
 		private boolean stopped = false;
 
 		/**
@@ -66,9 +81,7 @@ public class InRoomService extends RoboIntentService {
 		 * and start it
 		 */
 		private Audio() {
-			android.os.Process
-					.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
-			start();
+			android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
 		}
 
 		@Override
@@ -78,7 +91,7 @@ public class InRoomService extends RoboIntentService {
 	        AudioTrack track = null;
 	        short[][]   buffers  = new short[256][160];
 	        int ix = 0;
-
+	        Visualizer v = null;
 	        /*
 	         * Initialize buffer to hold continuously recorded audio data, start recording, and start
 	         * playback.
@@ -89,7 +102,11 @@ public class InRoomService extends RoboIntentService {
 	            track = new AudioTrack(AudioManager.STREAM_MUSIC, 8000, 
 	                    AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT, N*10, AudioTrack.MODE_STREAM);
 	            recorder.startRecording();
-	            Visualizer v = new Visualizer(track.getAudioSessionId());
+	            track.play();
+	            //am.setMode(AudioManager.MODE_IN_CALL);
+	            am.setBluetoothScoOn(true);
+	            Log.i(TAG,"Session for mic is " + recorder.getAudioSessionId());
+	            v = new Visualizer(track.getAudioSessionId());
 	            final OnDataCaptureListener listener = new OnDataCaptureListener() {
 					private int average = 0;
 					private int min = Integer.MIN_VALUE;
@@ -116,22 +133,23 @@ public class InRoomService extends RoboIntentService {
 						return BEEP_FREQUENCY*visualizer.getCaptureSize()/(visualizer.getSamplingRate()*2);
 					}
 				};
-				v.setDataCaptureListener(listener, rate, waveform, fft)
+				int result = 0;
+				result = v.setDataCaptureListener(listener, FFT_FREQUENCY, false, true);
+				Log.d(TAG, "Result for listener is "+result);
+				result = v.setEnabled(true);
+				Log.d(TAG, "Result for enabled is "+result);
 	            /*
 	             * Loops until something outside of this thread stops it.
 	             * Reads the data from the recorder and writes it to the audio track for playback.
 	             */
-	            while(!stopped)
-	            { 
-	                Log.i("Map", "Writing new data to buffer");
+	            while(!this.isInterrupted()) { 
+//	                //Log.i("Map", "Writing new data to buffer");
 	                short[] buffer = buffers[ix++ % buffers.length];
 	                N = recorder.read(buffer,0,buffer.length);
 	                track.write(buffer, 0, buffer.length);
-	                
 	            }
 	        }
-	        catch(Throwable x)
-	        { 
+	        catch(Throwable x) { 
 	            Log.w("Audio", "Error reading voice audio", x);
 	        }
 	        /*
@@ -139,10 +157,13 @@ public class InRoomService extends RoboIntentService {
 	         */
 	        finally
 	        { 
+	        	v.setEnabled(false);
+	        	v.release();
 	            recorder.stop();
 	            recorder.release();
 	            track.stop();
 	            track.release();
+	            am.setStreamMute(AudioManager.STREAM_MUSIC, false);
 	        }
 	    }
 
@@ -150,9 +171,8 @@ public class InRoomService extends RoboIntentService {
 		 * Called from outside of the thread in order to stop the
 		 * recording/playback loop
 		 */
-		private void close() {
+		public void close() {
 			stopped = true;
 		}
-
 	}
 }
