@@ -19,6 +19,8 @@ public class InRoomService extends RoboIntentService {
 
 	private static final String TAG = "InRoomService";
 	public static final String PENDING_INTENT = "PendingIntent";
+	private static final int BEEP_FREQUENCY = 18000;
+	private static final float BEEP_LOUDNESS_THRESHOLD = 0.2f;
 	@Inject
 	PowerManager pm;
 
@@ -99,13 +101,19 @@ public class InRoomService extends RoboIntentService {
 					
 					@Override
 					public void onFftDataCapture(Visualizer visualizer, byte[] fft, int samplingRate) {
-						if(fft[getIndex(visualizer)] > ) {
-							
+						
+						// Bucket index of BEEP_FREQUENCY in fft data
+						int k = getIndex(visualizer); 	
+					
+						int difference = Math.abs(fft[k]-fft[k+1]);
+						
+						if (difference / fft[k] > BEEP_LOUDNESS_THRESHOLD) {
+							// Beep detected
 						}
 					}
 
 					private int getIndex(Visualizer visualizer) {
-						return visualizer.getCaptureSize()/2 /visualizer.getSamplingRate();
+						return BEEP_FREQUENCY*visualizer.getCaptureSize()/(visualizer.getSamplingRate()*2);
 					}
 				};
 				v.setDataCaptureListener(listener, rate, waveform, fft)
