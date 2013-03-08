@@ -1,6 +1,7 @@
 package edu.ucsb.ece251.charlesmunger.roomdetector;
 
 import roboguice.receiver.RoboBroadcastReceiver;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.telephony.TelephonyManager;
@@ -17,7 +18,7 @@ public class CallReceiver extends RoboBroadcastReceiver {
 		switch(intent.getIntExtra(TelephonyManager.EXTRA_STATE, -1)) {
 		case TelephonyManager.CALL_STATE_IDLE: break;
 		case TelephonyManager.CALL_STATE_RINGING: 
-			final Intent temp = i;
+			final PendingIntent temp = PendingIntent.getBroadcast(context, 0, i, 0);
 			i = new Intent(context, InRoomService.class);
 			i.putExtra(InRoomService.PENDING_INTENT, temp);
 			break;

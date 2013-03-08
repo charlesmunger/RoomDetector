@@ -1,10 +1,10 @@
 package edu.ucsb.ece251.charlesmunger.roomdetector;
 
-import java.io.Closeable;
-
 import org.hermit.dsp.FFTTransformer;
 
 import roboguice.service.RoboIntentService;
+import android.app.PendingIntent;
+import android.app.PendingIntent.CanceledException;
 import android.content.Intent;
 import android.media.AudioFormat;
 import android.media.AudioManager;
@@ -21,11 +21,8 @@ public class InRoomService extends RoboIntentService {
 	private static final String TAG = "InRoomService";
 	public static final String PENDING_INTENT = "PendingIntent";
 	private static final int BEEP_FREQUENCY = 18000;
-	private static final float BEEP_LOUDNESS_THRESHOLD = 0.2f;
-	@Inject
-	PowerManager pm;
-	@Inject
-	AudioManager am;
+	@Inject	PowerManager pm;
+	@Inject	AudioManager am;
 
 	public InRoomService() {
 		super(TAG);
@@ -39,14 +36,14 @@ public class InRoomService extends RoboIntentService {
 		wl.acquire();
 		try {
 			if (inRoom()) {
-				Log.d(TAG,
-						"Launching intent"
-								+ ((Intent) intent
-										.getParcelableExtra(PENDING_INTENT))
-										.getAction());
-				startService(((Intent) intent
-						.getParcelableExtra(PENDING_INTENT)));
+				Log.d(TAG,"Launching intent from "+ ((PendingIntent) intent
+										.getParcelableExtra(PENDING_INTENT)).toString());
+				((PendingIntent) intent.getParcelableExtra(PENDING_INTENT)).send();
+			} else {
+				Log.d(TAG, "Not sending intent");
 			}
+		} catch (CanceledException e) {
+			Log.e(TAG, "PendingIntent no longer allowing "+e.getMessage());
 		} finally {
 			wl.release();
 		}
@@ -58,11 +55,8 @@ public class InRoomService extends RoboIntentService {
 		try {
 			a.join();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Log.wtf(TAG, "should never happen",e);
 		}
-		a.close();
-
 		return a.inRoom;
 	}
 
@@ -70,10 +64,9 @@ public class InRoomService extends RoboIntentService {
 	 * Thread to manage live recording/playback of voice input from the device's
 	 * microphone.
 	 */
-	private class Audio extends Thread implements Closeable {
+	private class Audio extends Thread {
+		private static final int BLOCK_SIZE = 1024;
 		private static final int SAMPLE_RATE = 44100;
-		private static final int FFT_FREQUENCY = 20000;
-		private boolean stopped = false;
 		public boolean inRoom = false;
 
 		/**
@@ -89,10 +82,10 @@ public class InRoomService extends RoboIntentService {
 	    public void run() { 
 	        Log.i("Audio", "Running Audio Thread");
 	        AudioRecord recorder = null;
-	        final short[] buff = new short[2*1024];
-	        final float[] spectrumData = new float[1024];
+	        final short[] buff = new short[2*BLOCK_SIZE];
+	        final float[] spectrumData = new float[BLOCK_SIZE];
 
-	        final FFTTransformer ft = new FFTTransformer(1024*2);
+	        final FFTTransformer ft = new FFTTransformer(BLOCK_SIZE*2);
 	        /*
 	         * Initialize buffer to hold continuously recorded audio data, start recording, and start
 	         * playback.
@@ -122,14 +115,10 @@ public class InRoomService extends RoboIntentService {
 					}
 				}
 				
-				@Override
-				public void onMarkerReached(AudioRecord recorder) {
-					///Ignore
-				}
+				@Override public void onMarkerReached(AudioRecord recorder) {} //ignore
 			};
 			
 	        try {
-	            
 	            recorder.setRecordPositionUpdateListener(l);
 	            int result = recorder.setPositionNotificationPeriod(buff.length);
 				if(result != AudioRecord.SUCCESS) {Log.e(TAG, "Error code " + result);};
@@ -141,7 +130,7 @@ public class InRoomService extends RoboIntentService {
 	        } catch(InterruptedException i) {
 	        	
 	        } catch(Throwable x) { 
-	            Log.w("Audio", "Error reading voice audio", x);
+	            Log.w("Audio", "Error reading audio", x);
 	        }
 	        /*
 	         * Frees the thread's resources after the loop completes so that it can be run again
@@ -151,13 +140,5 @@ public class InRoomService extends RoboIntentService {
 	            recorder.release();
 	        }
 	    }
-
-		/**
-		 * Called from outside of the thread in order to stop the
-		 * recording/playback loop
-		 */
-		public void close() {
-			stopped = true;
-		}
 	}
 }
