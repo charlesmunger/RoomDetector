@@ -20,7 +20,7 @@ public class InRoomService extends RoboIntentService {
 
 	private static final String TAG = "InRoomService";
 	public static final String PENDING_INTENT = "PendingIntent";
-	private static final int BEEP_FREQUENCY = 18000;
+	//private static final int BEEP_FREQUENCY = 18000;
 	@Inject	PowerManager pm;
 	@Inject	AudioManager am;
 
@@ -55,7 +55,7 @@ public class InRoomService extends RoboIntentService {
 		try {
 			a.join();
 		} catch (InterruptedException e) {
-			Log.wtf(TAG, "should never happen",e);
+			Log.w(TAG, "should never happen",e);
 		}
 		return a.inRoom;
 	}

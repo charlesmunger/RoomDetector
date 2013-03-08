@@ -23,7 +23,7 @@ public class CallReceiver extends RoboBroadcastReceiver {
 			i.putExtra(InRoomService.PENDING_INTENT, temp);
 			break;
 		case TelephonyManager.CALL_STATE_OFFHOOK: break;
-		default: Log.wtf(TAG, "Unexpected state");
+		default: Log.w(TAG, "Unexpected state");
 		}
 		context.startService(i);
 	}

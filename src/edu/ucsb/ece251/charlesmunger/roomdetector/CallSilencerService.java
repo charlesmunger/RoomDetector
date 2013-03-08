@@ -24,7 +24,7 @@ public class CallSilencerService extends RoboIntentService {
 		case TelephonyManager.CALL_STATE_IDLE: idle(); break;
 		case TelephonyManager.CALL_STATE_RINGING: ringing(); break;
 		case TelephonyManager.CALL_STATE_OFFHOOK: offHook(); break;
-		default: Log.wtf(TAG, "Unexpected state");
+		default: Log.w(TAG, "Unexpected state");
 		}
 	}
 

@@ -5,7 +5,6 @@ import roboguice.inject.InjectView;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.content.LocalBroadcastManager;
 import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
