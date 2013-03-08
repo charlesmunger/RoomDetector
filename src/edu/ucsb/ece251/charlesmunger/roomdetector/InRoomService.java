@@ -20,6 +20,8 @@ public class InRoomService extends RoboIntentService {
 
 	private static final String TAG = "InRoomService";
 	public static final String PENDING_INTENT = "PendingIntent";
+	private static final int BEEP_FREQUENCY = 18000;
+	private static final float BEEP_LOUDNESS_THRESHOLD = 0.2f;
 	@Inject
 	PowerManager pm;
 	@Inject
@@ -95,7 +97,7 @@ public class InRoomService extends RoboIntentService {
 	         * Initialize buffer to hold continuously recorded audio data, start recording, and start
 	         * playback.
 	         */
-	        
+
 	        int N = AudioRecord.getMinBufferSize(SAMPLE_RATE,AudioFormat.CHANNEL_IN_MONO,AudioFormat.ENCODING_PCM_16BIT);
             recorder = new AudioRecord(AudioSource.MIC, SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, N*10);
             		OnRecordPositionUpdateListener l = new OnRecordPositionUpdateListener() {
