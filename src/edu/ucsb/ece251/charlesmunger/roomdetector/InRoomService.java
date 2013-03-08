@@ -7,7 +7,6 @@ import android.app.PendingIntent;
 import android.app.PendingIntent.CanceledException;
 import android.content.Intent;
 import android.media.AudioFormat;
-import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.media.AudioRecord.OnRecordPositionUpdateListener;
 import android.media.MediaRecorder.AudioSource;
@@ -22,7 +21,6 @@ public class InRoomService extends RoboIntentService {
 	public static final String PENDING_INTENT = "PendingIntent";
 	//private static final int BEEP_FREQUENCY = 18000;
 	@Inject	PowerManager pm;
-	@Inject	AudioManager am;
 
 	public InRoomService() {
 		super(TAG);
@@ -61,18 +59,13 @@ public class InRoomService extends RoboIntentService {
 	}
 
 	/*
-	 * Thread to manage live recording/playback of voice input from the device's
-	 * microphone.
+	 * Thread to manage live recording/analysis of audio
 	 */
 	private class Audio extends Thread {
 		private static final int BLOCK_SIZE = 1024;
 		private static final int SAMPLE_RATE = 44100;
 		public boolean inRoom = false;
 
-		/**
-		 * Give the thread high priority so that it's not canceled unexpectedly,
-		 * and start it
-		 */
 		private Audio() {
 			android.os.Process
 					.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
@@ -81,19 +74,14 @@ public class InRoomService extends RoboIntentService {
 		@Override
 	    public void run() { 
 	        Log.i("Audio", "Running Audio Thread");
-	        AudioRecord recorder = null;
 	        final short[] buff = new short[2*BLOCK_SIZE];
 	        final float[] spectrumData = new float[BLOCK_SIZE];
 
 	        final FFTTransformer ft = new FFTTransformer(BLOCK_SIZE*2);
-	        /*
-	         * Initialize buffer to hold continuously recorded audio data, start recording, and start
-	         * playback.
-	         */
 
 	        int N = AudioRecord.getMinBufferSize(SAMPLE_RATE,AudioFormat.CHANNEL_IN_MONO,AudioFormat.ENCODING_PCM_16BIT);
-            recorder = new AudioRecord(AudioSource.MIC, SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, N*10);
-            		OnRecordPositionUpdateListener l = new OnRecordPositionUpdateListener() {
+            AudioRecord recorder = new AudioRecord(AudioSource.MIC, SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, N*10);
+            OnRecordPositionUpdateListener l = new OnRecordPositionUpdateListener() {
 
 				@Override
 				public void onPeriodicNotification(AudioRecord recorder) {
@@ -128,7 +116,7 @@ public class InRoomService extends RoboIntentService {
 					wait(500);
 				}
 	        } catch(InterruptedException i) {
-	        	
+	        	//expected
 	        } catch(Throwable x) { 
 	            Log.w("Audio", "Error reading audio", x);
 	        }
