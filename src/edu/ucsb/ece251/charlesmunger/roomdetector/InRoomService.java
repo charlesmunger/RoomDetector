@@ -1,18 +1,16 @@
 package edu.ucsb.ece251.charlesmunger.roomdetector;
 
 import java.io.Closeable;
-import java.util.Arrays;
+
+import org.hermit.dsp.FFTTransformer;
 
 import roboguice.service.RoboIntentService;
 import android.content.Intent;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
-import android.media.AudioTrack;
-import android.media.MediaRecorder;
+import android.media.AudioRecord.OnRecordPositionUpdateListener;
 import android.media.MediaRecorder.AudioSource;
-import android.media.audiofx.Visualizer;
-import android.media.audiofx.Visualizer.OnDataCaptureListener;
 import android.os.PowerManager;
 import android.util.Log;
 
@@ -62,8 +60,8 @@ public class InRoomService extends RoboIntentService {
 			e.printStackTrace();
 		}
 		a.close();
-		
-		return true;
+
+		return a.inRoom;
 	}
 
 	/*
@@ -71,92 +69,84 @@ public class InRoomService extends RoboIntentService {
 	 * microphone.
 	 */
 	private class Audio extends Thread implements Closeable {
+		private static final int SAMPLE_RATE = 44100;
 		private static final int FFT_FREQUENCY = 20000;
 		private boolean stopped = false;
+		public boolean inRoom = false;
 
 		/**
 		 * Give the thread high priority so that it's not canceled unexpectedly,
 		 * and start it
 		 */
 		private Audio() {
-			android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
+			android.os.Process
+					.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
 		}
 
 		@Override
 	    public void run() { 
 	        Log.i("Audio", "Running Audio Thread");
 	        AudioRecord recorder = null;
-	        AudioTrack track = null;
-	        short[][]   buffers  = new short[256][160];
-	        int ix = 0;
-	        Visualizer v = null;
+	        final short[] buff = new short[2*1024];
+	        final float[] spectrumData = new float[1024];
+
+	        final FFTTransformer ft = new FFTTransformer(1024*2);
 	        /*
 	         * Initialize buffer to hold continuously recorded audio data, start recording, and start
 	         * playback.
 	         */
-	        try {
-	            int N = AudioRecord.getMinBufferSize(8000,AudioFormat.CHANNEL_IN_MONO,AudioFormat.ENCODING_PCM_16BIT);
-	            recorder = new AudioRecord(AudioSource.MIC, 8000, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, N*10);
-	            track = new AudioTrack(AudioManager.STREAM_MUSIC, 8000, 
-	                    AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT, N*10, AudioTrack.MODE_STREAM);
-	            recorder.startRecording();
-	            track.play();
-	            //am.setMode(AudioManager.MODE_IN_CALL);
-	            am.setBluetoothScoOn(true);
-	            Log.i(TAG,"Session for mic is " + recorder.getAudioSessionId());
-	            v = new Visualizer(track.getAudioSessionId());
-	            final OnDataCaptureListener listener = new OnDataCaptureListener() {
-					private int average = 0;
-					private int min = Integer.MIN_VALUE;
-					private int max = Integer.MAX_VALUE;
-					@Override
-					public void onWaveFormDataCapture(Visualizer visualizer, byte[] waveform,
-							int samplingRate) { //do nothing
-					}
-					
-					@Override
-					public void onFftDataCapture(Visualizer visualizer, byte[] fft, int samplingRate) {
-//						Log.i(TAG,Arrays.toString(fft));
-//						if(fft[getIndex(visualizer)] > ) {
-//							
-//						}
-					}
+	        
+	        int N = AudioRecord.getMinBufferSize(SAMPLE_RATE,AudioFormat.CHANNEL_IN_MONO,AudioFormat.ENCODING_PCM_16BIT);
+            recorder = new AudioRecord(AudioSource.MIC, SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, N*10);
+            		OnRecordPositionUpdateListener l = new OnRecordPositionUpdateListener() {
 
-					private int getIndex(Visualizer visualizer) {
-						return visualizer.getCaptureSize()/2 /visualizer.getSamplingRate();
+				@Override
+				public void onPeriodicNotification(AudioRecord recorder) {
+					recorder.read(buff, 0, buff.length);
+					ft.setInput(buff, 0, buff.length);
+					ft.transform();
+					ft.getResults(spectrumData);
+					float max = Float.MIN_VALUE;
+					int bucket = 0;
+					for(int i = 700;i<spectrumData.length;i++) {
+						if(spectrumData[i] > max) {
+							max = spectrumData[i];
+							bucket = i;
+						}
 					}
-				};
-				int result = 0;
-				result = v.setDataCaptureListener(listener, FFT_FREQUENCY, false, true);
-				Log.d(TAG, "Result for listener is "+result);
-				result = v.setEnabled(true);
-				Log.d(TAG, "Result for enabled is "+result);
-	            /*
-	             * Loops until something outside of this thread stops it.
-	             * Reads the data from the recorder and writes it to the audio track for playback.
-	             */
-	            while(!this.isInterrupted()) { 
-//	                //Log.i("Map", "Writing new data to buffer");
-	                short[] buffer = buffers[ix++ % buffers.length];
-	                N = recorder.read(buffer,0,buffer.length);
-	                track.write(buffer, 0, buffer.length);
-	            }
-	        }
-	        catch(Throwable x) { 
+					if(840 == Math.max(bucket, 840) && 830 == Math.min(bucket, 830)) { //determined empirically 
+						Audio.this.inRoom = true;
+						Audio.this.interrupt();
+					}
+				}
+				
+				@Override
+				public void onMarkerReached(AudioRecord recorder) {
+					///Ignore
+				}
+			};
+			
+	        try {
+	            
+	            recorder.setRecordPositionUpdateListener(l);
+	            int result = recorder.setPositionNotificationPeriod(buff.length);
+				if(result != AudioRecord.SUCCESS) {Log.e(TAG, "Error code " + result);};
+	            recorder.startRecording();
+                recorder.read(buff, 0, buff.length);
+                synchronized (this) {
+					wait(500);
+				}
+	        } catch(InterruptedException i) {
+	        	
+	        } catch(Throwable x) { 
 	            Log.w("Audio", "Error reading voice audio", x);
 	        }
 	        /*
 	         * Frees the thread's resources after the loop completes so that it can be run again
 	         */
-	        finally
-	        { 
-	        	v.setEnabled(false);
-	        	v.release();
+	        finally { 
 	            recorder.stop();
 	            recorder.release();
-	            track.stop();
-	            track.release();
-	            am.setStreamMute(AudioManager.STREAM_MUSIC, false);
 	        }
 	    }
 

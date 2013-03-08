@@ -21,7 +21,9 @@ public class MainActivity extends RoboActivity {
 			
 			@Override
 			public void onClick(View v) {
-				MainActivity.this.startService(new Intent(MainActivity.this, InRoomService.class));
+				Intent i = new Intent(MainActivity.this, InRoomService.class);
+				i.putExtra(InRoomService.PENDING_INTENT, new Intent("derp derp"));
+				MainActivity.this.startService(i);
 			}
 		});
 	}
