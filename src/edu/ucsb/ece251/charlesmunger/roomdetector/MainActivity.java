@@ -22,7 +22,9 @@ public class MainActivity extends RoboActivity {
 			@Override
 			public void onClick(View v) {
 				Intent i = new Intent(MainActivity.this, InRoomService.class);
-				i.putExtra(InRoomService.PENDING_INTENT, PendingIntent.getBroadcast(MainActivity.this, 0, new Intent("derp derp"), 0));
+				Intent send = new Intent("org.leetzone.android.yatsewidget.ACTION_MEDIA_COMMAND");
+				send.putExtra("org.leetzone.android.yatsewidget.EXTRA_STRING_PARAMS", "pause");
+				i.putExtra(InRoomService.PENDING_INTENT, PendingIntent.getService(MainActivity.this, 0, send, 0));
 				MainActivity.this.startService(i);
 			}
 		});
