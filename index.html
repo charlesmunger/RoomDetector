@@ -65,9 +65,20 @@
 
 <h2>PROGRESS</h2>
 
-<p>Feb 3 - Tested phone microphone frequency range. Using a spectral sound analyzer app, we found that a phone microphone was able to easily detect a signal at 18Khz. The signal was undetectable behind walls, yet completely detectable at any point in the room. It was also inaudible by us or anyone in the classroom.</p>
+<p>Mar 8 - Added XMBC integration via yatse</p>
+
+<p>Mar 7 - Room detection working! Successfully integerated a library that provides FFT. A separate thread now listens through the mic and grabs audio samples to feed into the FFT function. We have isolated the frequency bucket of interest (pertaining to our beep frequency) and can consistently detect when the tone is playing based on checking the sound level of that bucket in comparison to slightly lower and higher frequencies.</p>
+
+<p>Feb 28 - Visualizer FFT approach is not working as desired. Unfortunately there does not seem to be a way to feed microphone input into the FFT function except by playing it through the audio player (resulting in a massive feedback loop).</p>
+
+<p>Feb 21 - Attempting to use Visualizer class (built into Android) to perform the FFT with a callback based system.</p>
+
+<p>Feb 5 - Improved the behavior of muting the ringer system</p>
 
 <p>Feb 4 - Tested the ability to intercept an incoming phone call, and run our test program instead. Successful.</p>
+
+<p>Feb 3 - Tested phone microphone frequency range. Using a spectral sound analyzer app, we found that a phone microphone was able to easily detect a signal at 18Khz. The signal was undetectable behind walls, yet completely detectable at any point in the room. It was also inaudible by us or anyone in the classroom.</p>
+
       </section>
       <footer>
         <p>Project maintained by <a href="https://github.com/charlesmunger">charlesmunger</a></p>
