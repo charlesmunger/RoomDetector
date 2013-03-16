@@ -29,8 +29,7 @@ public class CallSilencerService extends RoboIntentService {
 	}
 
 	private void offHook() {
-		// TODO Auto-generated method stub
-		
+		am.setStreamMute(AudioManager.STREAM_RING, true);
 	}
 
 	private void idle() {
@@ -39,7 +38,7 @@ public class CallSilencerService extends RoboIntentService {
 	}
 
 	private void ringing() {
-		Log.d(TAG, "Muting ringer stream");
-		am.setStreamMute(AudioManager.STREAM_RING, true);
+		Log.d(TAG, "unmuting ringer stream");
+		am.setStreamMute(AudioManager.STREAM_RING, false);
 	}
 }

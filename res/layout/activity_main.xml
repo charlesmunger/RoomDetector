@@ -9,11 +9,12 @@
     tools:context=".MainActivity" >
 
     <Button
-        android:id="@+id/test_button"
+        android:id="@+id/xbmc_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
-        android:text="Button" />
+        android:text="@string/xbmc_button" 
+        android:onClick="xbmcButton"/>
 
 </RelativeLayout>

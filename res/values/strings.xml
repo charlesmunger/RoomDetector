@@ -6,5 +6,6 @@
     <string name="action_settings">Settings</string>
     <string name="detectRoomsDesc">Allow the app to detect the current room.</string>
     <string name="detectRoomsLab">Detect Current Room</string>
+    <string name="xbmc_button">Pause XBMC</string>
 
 </resources>
