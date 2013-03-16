@@ -76,31 +76,36 @@ public class InRoomService extends RoboIntentService {
 	        Log.i("Audio", "Running Audio Thread");
 	        final short[] buff = new short[2*BLOCK_SIZE];
 	        final float[] spectrumData = new float[BLOCK_SIZE];
+	        final float[][] history = new float[BLOCK_SIZE][20];
 
 	        final FFTTransformer ft = new FFTTransformer(BLOCK_SIZE*2);
 
 	        int N = AudioRecord.getMinBufferSize(SAMPLE_RATE,AudioFormat.CHANNEL_IN_MONO,AudioFormat.ENCODING_PCM_16BIT);
             AudioRecord recorder = new AudioRecord(AudioSource.MIC, SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, N*10);
             OnRecordPositionUpdateListener l = new OnRecordPositionUpdateListener() {
-
+    	        int index = 0;
+    	        boolean ignore = true;
 				@Override
 				public void onPeriodicNotification(AudioRecord recorder) {
 					recorder.read(buff, 0, buff.length);
 					ft.setInput(buff, 0, buff.length);
 					ft.transform();
-					ft.getResults(spectrumData);
-					float max = Float.MIN_VALUE;
-					int bucket = 0;
-					for(int i = 700;i<spectrumData.length;i++) {
-						if(spectrumData[i] > max) {
-							max = spectrumData[i];
-							bucket = i;
-						}
-					}
-					if(840 == Math.max(bucket, 840) && 830 == Math.min(bucket, 830)) { //determined empirically 
+					ft.getResults(spectrumData, history, index);
+					index = (index +1) % 20;
+					if(index > 18) ignore = false;
+					final int bucket = spectrumData[836] > spectrumData[837] ? 836:837;
+					if(!ignore) {
+						Log.v(TAG, " ");
+						Log.v(TAG, "bucket" + 834 + " amp "+spectrumData[834]*100000);
+						Log.v(TAG, "bucket" + 835 + " amp "+spectrumData[835]*100000);
+						Log.d(TAG, "bucket" + 836 + " amp "+spectrumData[836]*100000);
+						Log.v(TAG, "bucket" + 837 + " amp "+spectrumData[837]*100000);
+						Log.v(TAG, "bucket" + 838 + " amp "+spectrumData[838]*100000);
+						Log.v(TAG, " ");
+					if(spectrumData[838]*3/2 < spectrumData[bucket] && spectrumData[834]*3/2 < spectrumData[bucket]) {
 						Audio.this.inRoom = true;
 						Audio.this.interrupt();
-					}
+					}}
 				}
 				
 				@Override public void onMarkerReached(AudioRecord recorder) {} //ignore
@@ -113,7 +118,7 @@ public class InRoomService extends RoboIntentService {
 	            recorder.startRecording();
                 recorder.read(buff, 0, buff.length);
                 synchronized (this) {
-					wait(500);
+					wait(1000);
 				}
 	        } catch(InterruptedException i) {
 	        	//expected

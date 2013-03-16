@@ -6,5 +6,6 @@
     <string name="detectRoomsDesc">Allow the app to detect the current room.</string>
     <string name="detectRoomsLab">Detect Current Room</string>
     <string name="xbmc_button">Pause XBMC</string>
+    <string name="call_button">Simulate a phone call</string>
 
 </resources>

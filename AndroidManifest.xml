@@ -32,7 +32,8 @@
         <receiver
             android:name="edu.ucsb.ece251.charlesmunger.roomdetector.CallReceiver"
             android:exported="true" >
-            <intent-filter>
+            <intent-filter
+                android:priority="1001">
                 <action android:name="android.intent.action.PHONE_STATE" />
             </intent-filter>
         </receiver>

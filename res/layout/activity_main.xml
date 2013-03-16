@@ -17,4 +17,13 @@
         android:text="@string/xbmc_button" 
         android:onClick="xbmcButton"/>
 
+    <Button
+        android:id="@+id/call_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/xbmc_button"
+        android:layout_centerHorizontal="true"
+        android:onClick="callButton"
+        android:text="@string/call_button" />
+
 </RelativeLayout>

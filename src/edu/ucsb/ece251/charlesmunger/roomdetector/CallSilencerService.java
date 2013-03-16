@@ -11,8 +11,8 @@ import android.util.Log;
 public class CallSilencerService extends RoboIntentService {
 
 	private static final String TAG = "CallSilencerService";
+	public static final String EXTRA_STATE = "EXTRA_STATE";
 	@Inject AudioManager am;
-	@Inject TelephonyManager tm;
 	
 	public CallSilencerService() {
 		super(TAG);
@@ -20,7 +20,7 @@ public class CallSilencerService extends RoboIntentService {
 
 	@Override
 	public void onHandleIntent(Intent intent) {
-		switch(tm.getCallState()) {
+		switch(intent.getIntExtra(EXTRA_STATE, -1)) {
 		case TelephonyManager.CALL_STATE_IDLE: idle(); break;
 		case TelephonyManager.CALL_STATE_RINGING: ringing(); break;
 		case TelephonyManager.CALL_STATE_OFFHOOK: offHook(); break;
@@ -29,6 +29,7 @@ public class CallSilencerService extends RoboIntentService {
 	}
 
 	private void offHook() {
+		Log.d(TAG, "Off hook");
 		am.setStreamMute(AudioManager.STREAM_RING, true);
 	}
 
@@ -38,7 +39,7 @@ public class CallSilencerService extends RoboIntentService {
 	}
 
 	private void ringing() {
-		Log.d(TAG, "unmuting ringer stream");
-		am.setStreamMute(AudioManager.STREAM_RING, false);
+		Log.d(TAG, "muting ringer stream");
+		am.setStreamMute(AudioManager.STREAM_RING, true);
 	}
 }
