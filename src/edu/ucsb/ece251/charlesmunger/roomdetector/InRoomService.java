@@ -44,6 +44,7 @@ public class InRoomService extends RoboIntentService {
 			Log.e(TAG, "PendingIntent no longer allowing "+e.getMessage());
 		} finally {
 			wl.release();
+			Log.d(TAG, "releasing wakelock");
 		}
 	}
 
