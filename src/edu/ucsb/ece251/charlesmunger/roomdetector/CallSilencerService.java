@@ -30,7 +30,7 @@ public class CallSilencerService extends RoboIntentService {
 
 	private void offHook() {
 		Log.d(TAG, "Off hook");
-		am.setStreamMute(AudioManager.STREAM_RING, true);
+		am.setStreamMute(AudioManager.STREAM_RING, false);
 	}
 
 	private void idle() {
